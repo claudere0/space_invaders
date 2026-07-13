@@ -1,8 +1,8 @@
 import pygame
 pygame.init()
 
-WIDTH = 600
-HEIGHT = 600
+WIDTH = 512
+HEIGHT = 512
 FPS = 60
 
 class Game:
