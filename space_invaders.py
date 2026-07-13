@@ -13,17 +13,28 @@ class Game:
 
         self.running = True
 
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    self.running = False
+
+    def update(self):
+        pass
+
+    def draw(self):
+        self.screen.fill((0,0,0))
+        # all game objects
+        pygame.display.flip()
+
     def run(self):
         while self.running:
             self.clock.tick(FPS)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
-                        self.running = False
-            self.screen.fill((0,0,0))
-            pygame.display.flip()
+            self.handle_events()
+            self.update()
+            self.draw()
         pygame.quit()
 
 if __name__ == '__main__':
