@@ -5,6 +5,15 @@ WIDTH = 512
 HEIGHT = 512
 FPS = 60
 
+SHAPE = [
+    '  xxxx  ',
+    ' xxxxxx ',
+    'xxxxxxxx',
+    'xxxxxxxx',
+    'xxx  xxx',
+    'xx    xx'
+]
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -72,6 +81,13 @@ class Laser(pygame.sprite.Sprite):
     def update(self):
         self.rect.y += self.speed
         self.destroy()
+
+class Block(pygame.sprite.Sprite):
+    def __init__(self, size, x, y):
+        super().__init__()
+        self.image = pygame.Surface((size, size))
+        self.image.fill((255,0,0))
+        self.rect = self.image.get_rect(topleft = (x,y))
 
 class Game:
     def __init__(self):
