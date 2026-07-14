@@ -12,6 +12,10 @@ class Player(pygame.sprite.Sprite):
         self.width = self.image.get_width()
         self.height = self.image.get_height()
 
+        self.lasers = pygame.sprite.Group()
+        self.laser_sound = pygame.mixer.Sound('audio/audio_laser.wav')
+        self.laser_sound.set_volume(0.25)
+
         self.restart()
     
     def restart(self):
@@ -22,6 +26,7 @@ class Player(pygame.sprite.Sprite):
         self.ready = True
         self.laser_time = 0
         self.laser_cooldown = 600
+        self.lasers.empty()
 
     def get_input(self):
         keys = pygame.key.get_pressed()
@@ -32,28 +37,32 @@ class Player(pygame.sprite.Sprite):
             self.rect.x -= self.speed
 
         if keys[pygame.K_SPACE] and self.ready:
-            # self.shoot_laser()
+            self.shoot_laser()
             self.ready = False
+            self.laser_time = pygame.time.get_ticks()
+            self.laser_sound.play()
 
     # recharge
-    def reachage(self):
+    def recharge(self):
         if not self.ready:
             current_time = pygame.time.get_ticks()
             if current_time - self.laser_time >= self.laser_cooldown:
                 self.ready = True
-    # shoot_lazer
-    
+
+    def shoot_laser(self):
+        self.lasers.add(Laser(self.rect.center))
+
     def update(self):
         self.get_input()
-        # recharge
-        # lasers.update()
+        self.recharge()
+        self.lasers.update()
 
 class Laser(pygame.sprite.Sprite):
     def __init__(self, position):
         super().__init__()
-        self.speed = -8
-        self.image = self.Surface((8,16))
+        self.image = pygame.Surface((8,16))
         self.image.fill((255,255,255))
+        self.speed = -8
         self.rect = self.image.get_rect(center=position)
 
     def destroy(self):
@@ -95,6 +104,7 @@ class Game:
     def draw(self):
         self.screen.fill((0,0,0))
         # all game objects
+        self.player.sprite.lasers.draw(self.screen)
         self.player.draw(self.screen)
         pygame.display.flip()
 
