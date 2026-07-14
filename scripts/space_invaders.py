@@ -83,9 +83,9 @@ class Laser(pygame.sprite.Sprite):
         self.destroy()
 
 class Block(pygame.sprite.Sprite):
-    def __init__(self, size, x, y):
+    def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.Surface((size, size))
+        self.image = pygame.Surface((8, 8))
         self.image.fill((255,0,0))
         self.rect = self.image.get_rect(topleft = (x,y))
 
@@ -98,7 +98,26 @@ class Game:
         player_sprite = Player()
         self.player = pygame.sprite.GroupSingle(player_sprite)
 
+        self.blocks = pygame.sprite.Group()
+        self.obstacle_y_position = int((HEIGHT*3)//4)
+        self.create_multiple_obstacles()
+
         self.running = True
+        self.reset()
+
+    def reset(self):
+        pass # self.state = MENU or self.state = PLAYING
+
+    def create_obstacle(self, x, y):
+        for row_index, row in enumerate(SHAPE):
+            for index, sign in enumerate(row):
+                if sign == 'x':
+                    self.blocks.add(Block(x + index * 8, y + row_index * 8))
+
+    def create_multiple_obstacles(self, offset = 32):
+        for i in range(7):
+            if i % 2 == 0:
+                self.create_obstacle(i * 64 + offset, self.obstacle_y_position)
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -122,6 +141,7 @@ class Game:
         # all game objects
         self.player.sprite.lasers.draw(self.screen)
         self.player.draw(self.screen)
+        self.blocks.draw(self.screen)
         pygame.display.flip()
 
     def run(self):
