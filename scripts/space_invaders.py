@@ -48,6 +48,22 @@ class Player(pygame.sprite.Sprite):
         # recharge
         # lasers.update()
 
+class Laser(pygame.sprite.Sprite):
+    def __init__(self, position):
+        super().__init__()
+        self.speed = -8
+        self.image = self.Surface((8,16))
+        self.image.fill((255,255,255))
+        self.rect = self.image.get_rect(center=position)
+
+    def destroy(self):
+        if self.rect.y <= -32 or self.rect.y >= HEIGHT + 32:
+            self.kill()
+
+    def update(self):
+        self.rect.y += self.speed
+        self.destroy()
+
 class Game:
     def __init__(self):
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
