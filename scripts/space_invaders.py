@@ -116,7 +116,7 @@ class Extra(pygame.sprite.Sprite):
             x = -32
             self.speed = 3
 
-        self.rect = self.image.get_rect(topleft = (x, 80))
+        self.rect = self.image.get_rect(topleft = (x, 64))
 
     def update(self):
         self.rect.x += self.speed
@@ -126,7 +126,7 @@ class Game:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption('space invaders')
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.Font('font/Pixeled.ttf', 20)
+        self.font = pygame.font.Font('font/Pixeled.ttf', 24)
         
         player_sprite = Player()
         self.player = pygame.sprite.GroupSingle(player_sprite)
@@ -135,6 +135,7 @@ class Game:
         self.obstacle_y_position = int((HEIGHT*3)//4)
         self.create_multiple_obstacles()
 
+        self.score = 0
         self.running = True
         self.reset()
 
@@ -192,7 +193,18 @@ class Game:
         self.player.sprite.lasers.draw(self.screen)
         self.player.draw(self.screen)
         self.blocks.draw(self.screen)
+        # aliens
+        # aliens lasers
+        # extra
+        # lives
+        self.draw_score()
+        # victory_message
         pygame.display.flip()
+
+    def draw_score(self):
+        score_surface = self.font.render(f"score: {self.score}", False, (255,255,255))
+        score_rect = score_surface.get_rect(topleft=(8,-16))
+        self.screen.blit(score_surface, score_rect)
 
     def run(self):
         while self.running:
