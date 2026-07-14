@@ -89,6 +89,38 @@ class Block(pygame.sprite.Sprite):
         self.image.fill((255,0,0))
         self.rect = self.image.get_rect(topleft = (x,y))
 
+class Alien(pygame.sprite.Sprite):
+    def __init__(self, color, x, y):
+        super().__init__()
+        file_path = 'images/' + color + '.png'
+        self.image = pygame.image.load(file_path).convert_alpha()
+        self.rect = self.image.get_rect(topleft = (x, y))
+
+        if color == 'red' : self.value = 100
+        elif color == 'yellow' : self.value = 200
+        else: self.value = 300
+
+    def direction(self, direction):
+        self.rect.x += direction
+
+class Extra(pygame.sprite.Sprite):
+    def __init__(self, side):
+        super().__init__()
+        self.image = pygame.image.load('images/extra.png').convert_alpha()
+        self.value = 500
+
+        if side == 'right':
+            x = WIDTH + 32
+            self.speed = -3
+        else:
+            x = -32
+            self.speed = 3
+
+        self.rect = self.image.get_rect(topleft = (x, 80))
+
+    def update(self):
+        self.rect.x += self.speed
+
 class Game:
     def __init__(self):
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
