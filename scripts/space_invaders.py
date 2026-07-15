@@ -231,18 +231,17 @@ class Game:
                     self.running = False
 
     def update(self):
-        # update objects
+        self.update_objects()
+        self.collision_checks()
+        self.check_game_state()
+
+    def update_objects(self):
         self.player.update()
         self.aliens.update(self.alien_direction)
         self.aliens_position_checker()
         self.aliens_lasers.update()
         self.extra_timer()
         self.extra.update()
-        
-        # check collisions
-        self.collision_checks()
-        # check game state
-
 
     def collision_checks(self):
         self.laser_collision()
@@ -274,8 +273,6 @@ class Game:
             if pygame.sprite.spritecollide(laser, self.player, False):
                 laser.kill()
                 self.lives -= 1
-                if self.lives <= 0:
-                    self.running = False
 
     def alien_collision(self):
         for alien in self.aliens:
@@ -286,11 +283,9 @@ class Game:
 
     def draw(self):
         self.screen.fill((0,0,0))
-        # all game objects
         self.draw_objects()
         self.draw_score()
         self.draw_lives()
-        self.victory_message()
         pygame.display.flip()
 
     def draw_objects(self):
@@ -311,11 +306,16 @@ class Game:
             x = self.live_position - (live * (self.live_surf.get_size()[0] + 32))
             self.screen.blit(self.live_surf,(x, 48))
 
-    def victory_message(self):
+    def draw_victory(self):
+        victory_surf = self.font.render('You_won', False, 'white')
+        victory_rect = victory_surf.get_rect(center = (WIDTH/2,HEIGHT/2))
+        self.screen.blit(victory_surf, victory_rect)
+
+    def check_game_state(self):
+        if self.lives <= 0:
+            self.running = False
         if not self.aliens:
-            victory_surf = self.font.render('You_won', False, 'white')
-            victory_rect = victory_surf.get_rect(center = (WIDTH/2,HEIGHT/2))
-            self.screen.blit(victory_surf, victory_rect)
+            self.draw_victory()
 
     def run(self):
         while self.running:
