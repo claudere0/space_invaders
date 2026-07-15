@@ -1,17 +1,17 @@
 import pygame
 pygame.init()
 
-WIDTH = 512
-HEIGHT = 512
+WIDTH = 1024
+HEIGHT = 1024
 FPS = 60
 
 SHAPE = [
-    '  xxxx  ',
-    ' xxxxxx ',
-    'xxxxxxxx',
-    'xxxxxxxx',
-    'xxx  xxx',
-    'xx    xx'
+    '  xxxxxxxx  ',
+    ' xxxxxxxxxx ',
+    'xxxxxxxxxxxx',
+    'xxxxxxxxxxxx',
+    'xxx      xxx',
+    'xx        xx'
 ]
 
 class Player(pygame.sprite.Sprite):
@@ -126,14 +126,19 @@ class Game:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption('space invaders')
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.Font('font/Pixeled.ttf', 24)
+        self.font = pygame.font.Font('font/Pixeled.ttf', 36)
         
         player_sprite = Player()
         self.player = pygame.sprite.GroupSingle(player_sprite)
 
         self.blocks = pygame.sprite.Group()
-        self.obstacle_y_position = int((HEIGHT*3)//4)
+        self.obstacle_y_position = int((HEIGHT*7)//8)
         self.create_multiple_obstacles()
+
+        self.aliens = pygame.sprite.Group()
+        self.aliens_lasers = pygame.sprite.Group()
+        self.alien_direction = 1
+        self.spawn_aliens(6, 8)
 
         self.score = 0
         self.running = True
@@ -148,10 +153,20 @@ class Game:
                 if sign == 'x':
                     self.blocks.add(Block(x + index * 8, y + row_index * 8))
 
-    def create_multiple_obstacles(self, offset = 32):
+    def create_multiple_obstacles(self, offset = 64):
         for i in range(7):
             if i % 2 == 0:
-                self.create_obstacle(i * 64 + offset, self.obstacle_y_position)
+                self.create_obstacle(i * 128 + offset, self.obstacle_y_position)
+
+    def spawn_aliens(self, rows, cols, width=64, height=48, x_offset = 32, y_offset = 32, starting_offset = 128):
+        for row_index, row in enumerate(range(rows)):
+            for col_index, col in enumerate(range(cols)):
+                x = col_index * width + col_index * x_offset
+                y = row_index * height + row_index * y_offset + starting_offset
+                if row_index == 0: alien_sprite = Alien('yellow', x, y)
+                elif 1 <=  row_index <= 2: alien_sprite = Alien('green', x, y)
+                else: alien_sprite = Alien('red', x, y)
+                self.aliens.add(alien_sprite)
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -193,7 +208,7 @@ class Game:
         self.player.sprite.lasers.draw(self.screen)
         self.player.draw(self.screen)
         self.blocks.draw(self.screen)
-        # aliens
+        self.aliens.draw(self.screen)
         # aliens lasers
         # extra
         # lives
@@ -203,7 +218,7 @@ class Game:
 
     def draw_score(self):
         score_surface = self.font.render(f"score: {self.score}", False, (255,255,255))
-        score_rect = score_surface.get_rect(topleft=(8,-16))
+        score_rect = score_surface.get_rect(topleft=(32,0))
         self.screen.blit(score_surface, score_rect)
 
     def run(self):
