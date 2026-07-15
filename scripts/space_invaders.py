@@ -142,6 +142,9 @@ class Game:
         self.spawn_aliens(6, 8)
         self.alien_direction = 1
 
+        self.explosion_sound = pygame.mixer.Sound('audio/audio_explosion.wav')
+        self.explosion_sound.set_volume(0.25)
+
         self.score = 0
         self.running = True
         self.reset()
@@ -214,15 +217,28 @@ class Game:
             if pygame.sprite.spritecollide(laser, self.blocks, True):
                 laser.kill()
 
+            aliens_hit = pygame.sprite.spritecollide(laser, self.aliens, True)
+            if aliens_hit:
+                for alien in aliens_hit:
+                    self.score += alien.value
+                laser.kill()
+                self.explosion_sound.play()
+
+            # if pygame.sprite.spritecollide(laser, self.extra, True):
+            #     self.score += 500
+            #     laser.kill()
+
     def alien_laser_collision(self):
         for laser in self.aliens_lasers:
             if pygame.sprite.spritecollide(laser, self.blocks, True):
                 laser.kill()
-        if pygame.sprite.spritecollide(laser, self.player, False):
-            laser.kill()
-            self.lives -= 1
-            if self.lives <= 0:
-                self.running = False
+                continue
+
+            if pygame.sprite.spritecollide(laser, self.player, False):
+                laser.kill()
+                self.lives -= 1
+                if self.lives <= 0:
+                    self.running = False
 
     def alien_collision(self):
         for alien in self.aliens:
