@@ -1,10 +1,12 @@
 import pygame
 from random import choice, randint
+from enum import Enum, auto
 pygame.init()
 
 WIDTH = 1024
 HEIGHT = 1024
 FPS = 60
+FONT_SIZE = 36
 
 SHAPE = [
     '  xxxxxxxx  ',
@@ -14,6 +16,16 @@ SHAPE = [
     'xxx      xxx',
     'xx        xx'
 ]
+
+BLOCK_SIZE = 8
+LIVES_X_OFFSET = 32
+LIVES_Y_OFFSET = 48
+SCORE_X_OFFSET = 32
+EXTRA_VALUE = 500
+EXTRA_MIN_TIME = 450
+EXTRA_MAX_TIME = 900
+EXTRA_Y_POSITION = 128
+ALIEN_LAZER_TIMER = 750
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -86,7 +98,7 @@ class Laser(pygame.sprite.Sprite):
 class Block(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.Surface((8, 8))
+        self.image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
         self.image.fill((255,0,0))
         self.rect = self.image.get_rect(topleft = (x,y))
 
@@ -100,7 +112,7 @@ class Alien(pygame.sprite.Sprite):
 
         if color == 'red':
             self.value = 100
-        elif color == 'yellow':
+        elif color == 'green':
             self.value = 200
         else: 
             self.value = 300
@@ -115,12 +127,12 @@ class Extra(pygame.sprite.Sprite):
 
         if side == 'right':
             x = WIDTH + 32
-            self.speed = -3
+            self.speed = -4
         else:
             x = -32
-            self.speed = 3
+            self.speed = 4
 
-        self.rect = self.image.get_rect(topleft = (x, 128))
+        self.rect = self.image.get_rect(topleft = (x, EXTRA_Y_POSITION))
 
     def update(self):
         self.rect.x += self.speed
@@ -130,27 +142,23 @@ class Game:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption('space invaders')
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.Font('font/Pixeled.ttf', 36)
+        self.font = pygame.font.Font('font/Pixeled.ttf', FONT_SIZE)
 
-        self.lives = 3
         self.live_surf = pygame.image.load('images/player.png').convert_alpha()
-        self.live_position = WIDTH - (self.live_surf.get_size()[0] + 32)
+        self.live_position = WIDTH - (self.live_surf.get_size()[0] + LIVES_X_OFFSET)
 
         player_sprite = Player()
         self.player = pygame.sprite.GroupSingle(player_sprite)
 
-        self.blocks = pygame.sprite.Group()
         self.obstacle_y_position = int((HEIGHT*7)//8)
+        self.blocks = pygame.sprite.Group()
         self.create_multiple_obstacles()
 
         self.aliens = pygame.sprite.Group()
         self.aliens_lasers = pygame.sprite.Group()
-        self.alien_direction = 1
-        self.spawn_aliens(6, 8)
-        self.alien_direction = 1
 
         self.extra = pygame.sprite.GroupSingle()
-        self.extra_spawn_time = randint(450,900)
+        self.extra_spawn_time = randint(EXTRA_MIN_TIME, EXTRA_MAX_TIME)
 
         music = pygame.mixer.Sound('audio/music.wav')
         music.set_volume(0.125)
@@ -162,20 +170,35 @@ class Game:
         self.explosion_sound.set_volume(0.25)
 
         self.ALIENLAZER = pygame.USEREVENT + 1
-        pygame.time.set_timer(self.ALIENLAZER, 750)
+        pygame.time.set_timer(self.ALIENLAZER, ALIEN_LAZER_TIMER)
 
-        self.score = 0
         self.running = True
         self.reset()
 
     def reset(self):
-        pass # self.state = MENU or self.state = PLAYING
+        self.score = 0
+        self.lives = 3
+
+        self.alien_direction = 1
+
+        self.player.sprite.restart()
+
+        self.blocks.empty()
+        self.create_multiple_obstacles()
+
+        self.aliens.empty()
+        self.spawn_aliens(6, 8)
+
+        self.aliens_lasers.empty()
+        self.extra.empty()
+
+        self.state = ''
 
     def create_obstacle(self, x, y):
         for row_index, row in enumerate(SHAPE):
             for index, sign in enumerate(row):
                 if sign == 'x':
-                    self.blocks.add(Block(x + index * 8, y + row_index * 8))
+                    self.blocks.add(Block(x + index * BLOCK_SIZE, y + row_index * BLOCK_SIZE))
 
     def create_multiple_obstacles(self, offset = 64):
         for i in range(7):
@@ -218,7 +241,7 @@ class Game:
         self.extra_spawn_time -= 1
         if self.extra_spawn_time <= 0:
             self.extra.add(Extra(choice(['right', 'left'])))
-            self.extra_spawn_time = randint(450, 900)
+            self.extra_spawn_time = randint(EXTRA_MIN_TIME, EXTRA_MAX_TIME)
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -261,7 +284,7 @@ class Game:
                 self.explosion_sound.play()
 
             if pygame.sprite.spritecollide(laser, self.extra, True):
-                self.score += 500
+                self.score += EXTRA_VALUE
                 laser.kill()
 
     def alien_laser_collision(self):
@@ -295,27 +318,29 @@ class Game:
         self.aliens.draw(self.screen)
         self.aliens_lasers.draw(self.screen)
         self.extra.draw(self.screen)
+        if self.state == 'win':
+            self.draw_victory()
 
     def draw_score(self):
         score_surface = self.font.render(f"score: {self.score}", False, (255,255,255))
-        score_rect = score_surface.get_rect(topleft=(32,0))
+        score_rect = score_surface.get_rect(topleft=(SCORE_X_OFFSET,0))
         self.screen.blit(score_surface, score_rect)
 
     def draw_lives(self):
         for live in range(self.lives - 1):
-            x = self.live_position - (live * (self.live_surf.get_size()[0] + 32))
-            self.screen.blit(self.live_surf,(x, 48))
+            x = self.live_position - (live * (self.live_surf.get_size()[0] + LIVES_X_OFFSET))
+            self.screen.blit(self.live_surf,(x, LIVES_Y_OFFSET))
 
     def draw_victory(self):
         victory_surf = self.font.render('You_won', False, 'white')
-        victory_rect = victory_surf.get_rect(center = (WIDTH/2,HEIGHT/2))
+        victory_rect = victory_surf.get_rect(center = (WIDTH//2,HEIGHT//2))
         self.screen.blit(victory_surf, victory_rect)
 
     def check_game_state(self):
         if self.lives <= 0:
             self.running = False
-        if not self.aliens:
-            self.draw_victory()
+        elif not self.aliens:
+            self.state = 'win'
 
     def run(self):
         while self.running:
