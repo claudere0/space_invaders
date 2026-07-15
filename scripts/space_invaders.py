@@ -199,7 +199,7 @@ class Game:
         self.aliens_lasers.empty()
         self.extra.empty()
 
-        self.state = GameState.PLAYING
+        self.state = GameState.MENU
 
     def create_obstacle(self, x, y):
         for row_index, row in enumerate(SHAPE):
@@ -313,10 +313,14 @@ class Game:
 
     def draw(self):
         self.screen.fill((0,0,0))
-        if self.state == GameState.PLAYING:
+        if self.state == GameState.MENU:
+            self.draw_menu()
+        elif self.state == GameState.PLAYING:
             self.draw_objects()
             self.draw_score()
             self.draw_lives()
+        elif self.state == GameState.GAME_OVER:
+            self.draw_game_over()
         elif self.state == GameState.WIN:
             self.draw_victory()
         pygame.display.flip()
@@ -339,14 +343,31 @@ class Game:
             x = self.live_position - (live * (self.live_surf.get_size()[0] + LIVES_X_OFFSET))
             self.screen.blit(self.live_surf,(x, LIVES_Y_OFFSET))
 
+    def draw_menu(self):
+        menu_surf = self.font.render('SPACE INVADERS', False, (255,255,255))
+        menu_rect = menu_surf.get_rect(center = (WIDTH//2,HEIGHT//2 - 64))
+        self.screen.blit(menu_surf, menu_rect)
+        start_message_surf = self.font.render('PRESS ENTER TO START', False, (255,255,255))
+        menu_message_rect = start_message_surf.get_rect(center = (WIDTH//2,HEIGHT//2))
+        self.screen.blit(start_message_surf, menu_message_rect)
+        quit_message_surf = self.font.render('OR Q TO QUIT', False, (255,255,255))
+        quit_message_rect = quit_message_surf.get_rect(center = (WIDTH//2,HEIGHT//2 + 64))
+        self.screen.blit(quit_message_surf, quit_message_rect)
+
+
     def draw_victory(self):
-        victory_surf = self.font.render('You_won', False, 'white')
+        victory_surf = self.font.render('You Won!', False, (255,255,255))
         victory_rect = victory_surf.get_rect(center = (WIDTH//2,HEIGHT//2))
         self.screen.blit(victory_surf, victory_rect)
 
+    def draw_game_over(self):
+        game_over_surf = self.font.render('You Lost!', False, (255,255,255))
+        game_over_rect = game_over_surf.get_rect(center = (WIDTH//2,HEIGHT//2))
+        self.screen.blit(game_over_surf, game_over_rect)
+
     def check_game_state(self):
         if self.lives <= 0:
-            self.running = False
+            self.state = GameState.GAME_OVER
         elif not self.aliens:
             self.state = GameState.WIN
 
