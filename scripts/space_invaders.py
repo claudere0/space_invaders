@@ -254,16 +254,27 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            if event.type == self.ALIENLAZER:
-                self.alien_shoot()
+            elif self.state == GameState.PLAYING:
+                if event.type == self.ALIENLAZER:
+                    self.alien_shoot()
             if event.type == pygame.KEYDOWN:
+                if self.state == GameState.MENU:
+                    if event.key == pygame.K_RETURN:
+                        self.state = GameState.PLAYING
+                elif self.state == GameState.GAME_OVER:
+                    if event.key == pygame.K_r:
+                        self.reset()
+                        self.state = GameState.PLAYING
                 if event.key == pygame.K_q:
                     self.running = False
 
     def update(self):
-        self.update_objects()
-        self.collision_checks()
-        self.check_game_state()
+        if self.state == GameState.PLAYING:
+            self.update_objects()
+            self.collision_checks()
+            self.check_game_state()
+        else:
+            return None
 
     def update_objects(self):
         self.player.update()
@@ -357,7 +368,7 @@ class Game:
         self.draw_message('YOU LOST!', 'up')
         self.draw_message('PRESS R TO RESTART')
         self.draw_message('OR Q TO QUIT', 'down')
-        
+
     def draw_message(self, message, position='mid'):
         self.surf = self.font.render(message, False, (255,255,255))
         if position == 'up':
