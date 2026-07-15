@@ -127,7 +127,8 @@ class Game:
         pygame.display.set_caption('space invaders')
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font('font/Pixeled.ttf', 36)
-        
+
+        self.lives = 3
         player_sprite = Player()
         self.player = pygame.sprite.GroupSingle(player_sprite)
 
@@ -209,21 +210,26 @@ class Game:
         self.alien_collision()
 
     def laser_collision(self):
-        if self.player.sprite.lasers:
-            for laser in self.player.sprite.lasers:
-                if pygame.sprite.spritecollide(laser, self.blocks, True):
-                    laser.kill()
+        for laser in self.player.sprite.lasers:
+            if pygame.sprite.spritecollide(laser, self.blocks, True):
+                laser.kill()
 
     def alien_laser_collision(self):
-        pass
+        for laser in self.aliens_lasers:
+            if pygame.sprite.spritecollide(laser, self.blocks, True):
+                laser.kill()
+        if pygame.sprite.spritecollide(laser, self.player, False):
+            laser.kill()
+            self.lives -= 1
+            if self.lives <= 0:
+                self.running = False
 
     def alien_collision(self):
-        if self.aliens:
-            for alien in self.aliens:
-                pygame.sprite.spritecollide(alien, self.blocks, True)
+        for alien in self.aliens:
+            pygame.sprite.spritecollide(alien, self.blocks, True)
 
-                if pygame.sprite.spritecollide(alien, self.player, False):
-                    self.running = False
+            if pygame.sprite.spritecollide(alien, self.player, False):
+                self.running = False
 
     def draw(self):
         self.screen.fill((0,0,0))
