@@ -27,6 +27,12 @@ EXTRA_MAX_TIME = 900
 EXTRA_Y_POSITION = 128
 ALIEN_LAZER_TIMER = 750
 
+class GameState(Enum):
+    MENU = auto()
+    PLAYING = auto()
+    GAME_OVER = auto()
+    WIN = auto()
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -187,12 +193,13 @@ class Game:
         self.create_multiple_obstacles()
 
         self.aliens.empty()
-        self.spawn_aliens(6, 8)
+        # self.spawn_aliens(6, 8)
+        self.spawn_aliens(1, 1)
 
         self.aliens_lasers.empty()
         self.extra.empty()
 
-        self.state = ''
+        self.state = GameState.PLAYING
 
     def create_obstacle(self, x, y):
         for row_index, row in enumerate(SHAPE):
@@ -306,9 +313,12 @@ class Game:
 
     def draw(self):
         self.screen.fill((0,0,0))
-        self.draw_objects()
-        self.draw_score()
-        self.draw_lives()
+        if self.state == GameState.PLAYING:
+            self.draw_objects()
+            self.draw_score()
+            self.draw_lives()
+        elif self.state == GameState.WIN:
+            self.draw_victory()
         pygame.display.flip()
 
     def draw_objects(self):
@@ -318,8 +328,6 @@ class Game:
         self.aliens.draw(self.screen)
         self.aliens_lasers.draw(self.screen)
         self.extra.draw(self.screen)
-        if self.state == 'win':
-            self.draw_victory()
 
     def draw_score(self):
         score_surface = self.font.render(f"score: {self.score}", False, (255,255,255))
@@ -340,7 +348,7 @@ class Game:
         if self.lives <= 0:
             self.running = False
         elif not self.aliens:
-            self.state = 'win'
+            self.state = GameState.WIN
 
     def run(self):
         while self.running:
