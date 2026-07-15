@@ -152,6 +152,10 @@ class Game:
         self.extra = pygame.sprite.GroupSingle()
         self.extra_spawn_time = randint(450,900)
 
+        music = pygame.mixer.Sound('audio/music.wav')
+        music.set_volume(0.125)
+        music.play(loops = -1)
+
         self.laser_sound = pygame.mixer.Sound('audio/audio_laser.wav')
         self.laser_sound.set_volume(0.25)
         self.explosion_sound = pygame.mixer.Sound('audio/audio_explosion.wav')
@@ -286,7 +290,7 @@ class Game:
         self.draw_objects()
         self.draw_score()
         self.draw_lives()
-        # victory_message
+        self.victory_message()
         pygame.display.flip()
 
     def draw_objects(self):
@@ -306,6 +310,12 @@ class Game:
         for live in range(self.lives - 1):
             x = self.live_position - (live * (self.live_surf.get_size()[0] + 32))
             self.screen.blit(self.live_surf,(x, 48))
+
+    def victory_message(self):
+        if not self.aliens:
+            victory_surf = self.font.render('You_won', False, 'white')
+            victory_rect = victory_surf.get_rect(center = (WIDTH/2,HEIGHT/2))
+            self.screen.blit(victory_surf, victory_rect)
 
     def run(self):
         while self.running:
