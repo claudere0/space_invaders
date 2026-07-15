@@ -69,9 +69,9 @@ class Player(pygame.sprite.Sprite):
 class Laser(pygame.sprite.Sprite):
     def __init__(self, position):
         super().__init__()
-        self.image = pygame.Surface((8,16))
+        self.image = pygame.Surface((8,32))
         self.image.fill((255,255,255))
-        self.speed = -8
+        self.speed = -12
         self.rect = self.image.get_rect(center=position)
 
     def destroy(self):
@@ -100,8 +100,8 @@ class Alien(pygame.sprite.Sprite):
         elif color == 'yellow' : self.value = 200
         else: self.value = 300
 
-    def direction(self, direction):
-        self.rect.x += direction
+    def update(self, direction):
+        self.rect.x += direction * 1
 
 class Extra(pygame.sprite.Sprite):
     def __init__(self, side):
@@ -139,6 +139,7 @@ class Game:
         self.aliens_lasers = pygame.sprite.Group()
         self.alien_direction = 1
         self.spawn_aliens(6, 8)
+        self.alien_direction = 1
 
         self.score = 0
         self.running = True
@@ -168,6 +169,21 @@ class Game:
                 else: alien_sprite = Alien('red', x, y)
                 self.aliens.add(alien_sprite)
 
+    def aliens_move_down(self, distance):
+        if self.aliens:
+            for alien in self.aliens.sprites():
+                alien.rect.y += distance
+
+    def aliens_position_checker(self):
+        all_aliens = self.aliens.sprites()
+        for alien in all_aliens:
+            if alien.rect.right >= WIDTH:
+                self.alien_direction = -1
+                self.aliens_move_down(5)
+            elif alien.rect.left <= 0:
+                self.alien_direction = 1
+                self.aliens_move_down(5)
+
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -179,6 +195,9 @@ class Game:
     def update(self):
         # update objects
         self.player.update()
+        self.aliens.update(self.alien_direction)
+        self.aliens_position_checker()
+        
         # check collisions
         self.collision_checks()
         # check game state
