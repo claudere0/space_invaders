@@ -1,4 +1,5 @@
 import pygame
+from random import choice, randint
 pygame.init()
 
 WIDTH = 1024
@@ -59,7 +60,7 @@ class Player(pygame.sprite.Sprite):
                 self.ready = True
 
     def shoot_laser(self):
-        self.lasers.add(Laser(self.rect.center))
+        self.lasers.add(Laser(self.rect.center, -12))
 
     def update(self):
         self.get_input()
@@ -67,11 +68,11 @@ class Player(pygame.sprite.Sprite):
         self.lasers.update()
 
 class Laser(pygame.sprite.Sprite):
-    def __init__(self, position):
+    def __init__(self, position, speed):
         super().__init__()
         self.image = pygame.Surface((8,32))
         self.image.fill((255,255,255))
-        self.speed = -12
+        self.speed = speed
         self.rect = self.image.get_rect(center=position)
 
     def destroy(self):
@@ -96,12 +97,15 @@ class Alien(pygame.sprite.Sprite):
         self.image = pygame.image.load(file_path).convert_alpha()
         self.rect = self.image.get_rect(topleft = (x, y))
 
-        if color == 'red' : self.value = 100
-        elif color == 'yellow' : self.value = 200
-        else: self.value = 300
+        if color == 'red':
+            self.value = 100
+        elif color == 'yellow':
+            self.value = 200
+        else: 
+            self.value = 300
 
     def update(self, direction):
-        self.rect.x += direction * 10
+        self.rect.x += direction * 1
 
 class Extra(pygame.sprite.Sprite):
     def __init__(self, side):
@@ -142,8 +146,13 @@ class Game:
         self.spawn_aliens(6, 8)
         self.alien_direction = 1
 
+        self.laser_sound = pygame.mixer.Sound('audio/audio_laser.wav')
+        self.laser_sound.set_volume(0.25)
         self.explosion_sound = pygame.mixer.Sound('audio/audio_explosion.wav')
         self.explosion_sound.set_volume(0.25)
+
+        self.ALIENLAZER = pygame.USEREVENT + 1
+        pygame.time.set_timer(self.ALIENLAZER, 750)
 
         self.score = 0
         self.running = True
@@ -188,10 +197,19 @@ class Game:
                 self.alien_direction = 1
                 self.aliens_move_down(5)
 
+    def alien_shoot(self):
+        if self.aliens:
+            random_alien = choice(self.aliens.sprites())
+            laser_sprite = Laser(random_alien.rect.center, 6)
+            self.aliens_lasers.add(laser_sprite)
+            self.laser_sound.play()
+
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+            if event.type == self.ALIENLAZER:
+                self.alien_shoot()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
                     self.running = False
@@ -201,6 +219,7 @@ class Game:
         self.player.update()
         self.aliens.update(self.alien_direction)
         self.aliens_position_checker()
+        self.aliens_lasers.update()
         
         # check collisions
         self.collision_checks()
@@ -255,6 +274,7 @@ class Game:
         self.blocks.draw(self.screen)
         self.aliens.draw(self.screen)
         # aliens lasers
+        self.aliens_lasers.draw(self.screen)
         # extra
         # lives
         self.draw_score()
