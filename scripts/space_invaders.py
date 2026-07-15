@@ -354,16 +354,27 @@ class Game:
         quit_message_rect = quit_message_surf.get_rect(center = (WIDTH//2,HEIGHT//2 + 64))
         self.screen.blit(quit_message_surf, quit_message_rect)
 
-
     def draw_victory(self):
-        victory_surf = self.font.render('You Won!', False, (255,255,255))
+        victory_surf = self.font.render('CONGRATULATIONS', False, (255,255,255))
+        victory_rect = victory_surf.get_rect(center = (WIDTH//2,HEIGHT//2 - 64))
+        self.screen.blit(victory_surf, victory_rect)
+        victory_surf = self.font.render('YOU WON!', False, (255,255,255))
         victory_rect = victory_surf.get_rect(center = (WIDTH//2,HEIGHT//2))
         self.screen.blit(victory_surf, victory_rect)
+        quit_message_surf = self.font.render('PRESS Q TO QUIT', False, (255,255,255))
+        quit_message_rect = quit_message_surf.get_rect(center = (WIDTH//2,HEIGHT//2 + 64))
+        self.screen.blit(quit_message_surf, quit_message_rect)
 
     def draw_game_over(self):
-        game_over_surf = self.font.render('You Lost!', False, (255,255,255))
-        game_over_rect = game_over_surf.get_rect(center = (WIDTH//2,HEIGHT//2))
+        game_over_surf = self.font.render('YOU LOST!', False, (255,255,255))
+        game_over_rect = game_over_surf.get_rect(center = (WIDTH//2,HEIGHT//2 -64))
         self.screen.blit(game_over_surf, game_over_rect)
+        restart_message_surf = self.font.render('PRESS R TO RESTART', False, (255,255,255))
+        restart_message_rect = restart_message_surf.get_rect(center = (WIDTH//2,HEIGHT//2))
+        self.screen.blit(restart_message_surf, restart_message_rect)
+        quit_message_surf = self.font.render('OR Q TO QUIT', False, (255,255,255))
+        quit_message_rect = quit_message_surf.get_rect(center = (WIDTH//2,HEIGHT//2 + 64))
+        self.screen.blit(quit_message_surf, quit_message_rect)
 
     def check_game_state(self):
         if self.lives <= 0:
