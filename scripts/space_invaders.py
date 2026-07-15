@@ -133,6 +133,9 @@ class Game:
         self.font = pygame.font.Font('font/Pixeled.ttf', 36)
 
         self.lives = 3
+        self.live_surf = pygame.image.load('images/player.png').convert_alpha()
+        self.live_position = WIDTH - (self.live_surf.get_size()[0] + 32)
+
         player_sprite = Player()
         self.player = pygame.sprite.GroupSingle(player_sprite)
 
@@ -300,7 +303,9 @@ class Game:
         self.screen.blit(score_surface, score_rect)
 
     def draw_lives(self):
-        pass
+        for live in range(self.lives - 1):
+            x = self.live_position - (live * (self.live_surf.get_size()[0] + 32))
+            self.screen.blit(self.live_surf,(x, 48))
 
     def run(self):
         while self.running:
