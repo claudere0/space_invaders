@@ -96,6 +96,7 @@ class Alien(pygame.sprite.Sprite):
         file_path = 'images/' + color + '.png'
         self.image = pygame.image.load(file_path).convert_alpha()
         self.rect = self.image.get_rect(topleft = (x, y))
+        self.speed = 2
 
         if color == 'red':
             self.value = 100
@@ -105,13 +106,12 @@ class Alien(pygame.sprite.Sprite):
             self.value = 300
 
     def update(self, direction):
-        self.rect.x += direction * 1
+        self.rect.x += direction * self.speed
 
 class Extra(pygame.sprite.Sprite):
     def __init__(self, side):
         super().__init__()
         self.image = pygame.image.load('images/extra.png').convert_alpha()
-        self.value = 500
 
         if side == 'right':
             x = WIDTH + 32
@@ -120,7 +120,7 @@ class Extra(pygame.sprite.Sprite):
             x = -32
             self.speed = 3
 
-        self.rect = self.image.get_rect(topleft = (x, 64))
+        self.rect = self.image.get_rect(topleft = (x, 128))
 
     def update(self):
         self.rect.x += self.speed
@@ -145,6 +145,9 @@ class Game:
         self.alien_direction = 1
         self.spawn_aliens(6, 8)
         self.alien_direction = 1
+
+        self.extra = pygame.sprite.GroupSingle()
+        self.extra_spawn_time = randint(450,900)
 
         self.laser_sound = pygame.mixer.Sound('audio/audio_laser.wav')
         self.laser_sound.set_volume(0.25)
@@ -192,10 +195,10 @@ class Game:
         for alien in all_aliens:
             if alien.rect.right >= WIDTH:
                 self.alien_direction = -1
-                self.aliens_move_down(5)
+                self.aliens_move_down(3)
             elif alien.rect.left <= 0:
                 self.alien_direction = 1
-                self.aliens_move_down(5)
+                self.aliens_move_down(3)
 
     def alien_shoot(self):
         if self.aliens:
@@ -203,6 +206,12 @@ class Game:
             laser_sprite = Laser(random_alien.rect.center, 6)
             self.aliens_lasers.add(laser_sprite)
             self.laser_sound.play()
+
+    def extra_timer(self):
+        self.extra_spawn_time -= 1
+        if self.extra_spawn_time <= 0:
+            self.extra.add(Extra(choice(['right', 'left'])))
+            self.extra_spawn_time = randint(450, 900)
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -220,6 +229,8 @@ class Game:
         self.aliens.update(self.alien_direction)
         self.aliens_position_checker()
         self.aliens_lasers.update()
+        self.extra_timer()
+        self.extra.update()
         
         # check collisions
         self.collision_checks()
@@ -243,9 +254,9 @@ class Game:
                 laser.kill()
                 self.explosion_sound.play()
 
-            # if pygame.sprite.spritecollide(laser, self.extra, True):
-            #     self.score += 500
-            #     laser.kill()
+            if pygame.sprite.spritecollide(laser, self.extra, True):
+                self.score += 500
+                laser.kill()
 
     def alien_laser_collision(self):
         for laser in self.aliens_lasers:
@@ -269,22 +280,27 @@ class Game:
     def draw(self):
         self.screen.fill((0,0,0))
         # all game objects
+        self.draw_objects()
+        self.draw_score()
+        self.draw_lives()
+        # victory_message
+        pygame.display.flip()
+
+    def draw_objects(self):
         self.player.sprite.lasers.draw(self.screen)
         self.player.draw(self.screen)
         self.blocks.draw(self.screen)
         self.aliens.draw(self.screen)
-        # aliens lasers
         self.aliens_lasers.draw(self.screen)
-        # extra
-        # lives
-        self.draw_score()
-        # victory_message
-        pygame.display.flip()
+        self.extra.draw(self.screen)
 
     def draw_score(self):
         score_surface = self.font.render(f"score: {self.score}", False, (255,255,255))
         score_rect = score_surface.get_rect(topleft=(32,0))
         self.screen.blit(score_surface, score_rect)
+
+    def draw_lives(self):
+        pass
 
     def run(self):
         while self.running:
