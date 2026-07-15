@@ -101,7 +101,7 @@ class Alien(pygame.sprite.Sprite):
         else: self.value = 300
 
     def update(self, direction):
-        self.rect.x += direction * 1
+        self.rect.x += direction * 10
 
 class Extra(pygame.sprite.Sprite):
     def __init__(self, side):
@@ -202,7 +202,6 @@ class Game:
         self.collision_checks()
         # check game state
 
-        pass
 
     def collision_checks(self):
         self.laser_collision()
@@ -219,7 +218,12 @@ class Game:
         pass
 
     def alien_collision(self):
-        pass
+        if self.aliens:
+            for alien in self.aliens:
+                pygame.sprite.spritecollide(alien, self.blocks, True)
+
+                if pygame.sprite.spritecollide(alien, self.player, False):
+                    self.running = False
 
     def draw(self):
         self.screen.fill((0,0,0))
