@@ -1,158 +1,20 @@
 import pygame
 from random import choice, randint
 from enum import Enum, auto
+
+from config import *
+from player import Player
+from laser import Laser
+from block import Block
+from alien import Alien
+from extra import Extra
 pygame.init()
-
-WIDTH = 1024
-HEIGHT = 1024
-FPS = 60
-FONT_SIZE = 36
-
-SHAPE = [
-    '  xxxxxxxx  ',
-    ' xxxxxxxxxx ',
-    'xxxxxxxxxxxx',
-    'xxxxxxxxxxxx',
-    'xxx      xxx',
-    'xx        xx'
-]
-
-BLOCK_SIZE = 8
-LIVES_X_OFFSET = 32
-LIVES_Y_OFFSET = 48
-SCORE_X_OFFSET = 32
-EXTRA_VALUE = 500
-EXTRA_MIN_TIME = 7
-EXTRA_MAX_TIME = 15
-EXTRA_Y_POSITION = 128
-ALIEN_LAZER_TIMER = 750
 
 class GameState(Enum):
     MENU = auto()
     PLAYING = auto()
     GAME_OVER = auto()
     WIN = auto()
-
-class Player(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.image = pygame.image.load('images/player.png').convert_alpha()
-        self.width = self.image.get_width()
-        self.height = self.image.get_height()
-
-        self.lasers = pygame.sprite.Group()
-        self.laser_sound = pygame.mixer.Sound('audio/audio_laser.wav')
-        self.laser_sound.set_volume(0.25)
-
-        self.restart()
-    
-    def restart(self):
-        self.x = (WIDTH - self.width) / 2
-        self.y = HEIGHT - self.height
-        self.rect = self.image.get_rect(topleft = (self.x, self.y))
-        self.speed = 360
-        self.ready = True
-        self.laser_time = 0
-        self.laser_cooldown = 500
-        self.lasers.empty()
-
-    def get_input(self, dt):
-        keys = pygame.key.get_pressed()
-
-        if keys[pygame.K_RIGHT] and self.rect.x <= WIDTH - self.width:
-            self.x += self.speed * dt
-            self.x = min(self.x, WIDTH - self.width)
-            self.rect.x = round(self.x)
-        elif keys[pygame.K_LEFT] and self.rect.x >= 0:
-            self.x -= self.speed * dt
-            self.x = max(self.x, 0)
-            self.rect.x = round(self.x)
-
-        if keys[pygame.K_SPACE] and self.ready:
-            self.shoot_laser()
-            self.ready = False
-            self.laser_time = pygame.time.get_ticks()
-            self.laser_sound.play()
-
-    # recharge
-    def recharge(self):
-        if not self.ready:
-            current_time = pygame.time.get_ticks()
-            if current_time - self.laser_time >= self.laser_cooldown:
-                self.ready = True
-
-    def shoot_laser(self):
-        self.lasers.add(Laser(self.rect.center, -720))
-
-    def update(self, dt):
-        self.get_input(dt)
-        self.recharge()
-        self.lasers.update(dt)
-
-class Laser(pygame.sprite.Sprite):
-    def __init__(self, position, speed):
-        super().__init__()
-        self.image = pygame.Surface((8,32))
-        self.image.fill((255,255,255))
-        self.speed = speed
-        self.rect = self.image.get_rect(center=position)
-        self.y = position[1]
-
-    def destroy(self):
-        if self.rect.y <= -32 or self.rect.y >= HEIGHT + 32:
-            self.kill()
-
-    def update(self, dt):
-        self.y += self.speed * dt
-        self.rect.y = round(self.y)
-        self.destroy()
-
-class Block(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
-        self.image.fill((255,0,0))
-        self.rect = self.image.get_rect(topleft = (x,y))
-
-class Alien(pygame.sprite.Sprite):
-    def __init__(self, color, x, y):
-        super().__init__()
-        file_path = 'images/' + color + '.png'
-        self.image = pygame.image.load(file_path).convert_alpha()
-        self.rect = self.image.get_rect(topleft = (x, y))
-        self.x = float(x)
-        self.y = float(y)
-        self.speed = 120
-
-        if color == 'red':
-            self.value = 100
-        elif color == 'green':
-            self.value = 200
-        else: 
-            self.value = 300
-
-    def update(self, direction, dt):
-        self.x += direction * self.speed * dt
-        self.rect.x = round(self.x)
-
-class Extra(pygame.sprite.Sprite):
-    def __init__(self, side):
-        super().__init__()
-        self.image = pygame.image.load('images/extra.png').convert_alpha()
-
-        if side == 'right':
-            x = WIDTH + 32
-            self.speed = -240
-        else:
-            x = -32
-            self.speed = 240
-
-        self.x = float(x)
-        self.rect = self.image.get_rect(topleft = (x, EXTRA_Y_POSITION))
-
-    def update(self, dt):
-        self.x += self.speed * dt
-        self.rect.x = round(self.x)
 
 class Game:
     def __init__(self):
