@@ -8,6 +8,7 @@ from laser import Laser
 from block import Block
 from alien import Alien
 from extra import Extra
+import hud
 pygame.init()
 
 class GameState(Enum):
@@ -22,7 +23,6 @@ class Game:
         pygame.display.set_caption('space invaders')
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font('font/Pixeled.ttf', FONT_SIZE)
-
         self.live_surf = pygame.image.load('images/player.png').convert_alpha()
         self.live_position = WIDTH - (self.live_surf.get_size()[0] + LIVES_X_OFFSET)
 
@@ -199,15 +199,15 @@ class Game:
     def draw(self):
         self.screen.fill((0,0,0))
         if self.state == GameState.MENU:
-            self.draw_menu()
+            hud.draw_menu(self.screen, self.font)
         elif self.state == GameState.PLAYING:
             self.draw_objects()
-            self.draw_score()
-            self.draw_lives()
+            hud.draw_score(self.screen, self.score, self.font)
+            hud.draw_lives(self.screen, self.lives, self.live_surf, self.live_position)
         elif self.state == GameState.GAME_OVER:
-            self.draw_game_over()
+            hud.draw_game_over(self.screen, self.font)
         elif self.state == GameState.WIN:
-            self.draw_victory()
+            hud.draw_victory(self.screen, self.font)
         pygame.display.flip()
 
     def draw_objects(self):
@@ -217,41 +217,6 @@ class Game:
         self.aliens.draw(self.screen)
         self.aliens_lasers.draw(self.screen)
         self.extra.draw(self.screen)
-
-    def draw_score(self):
-        score_surface = self.font.render(f"score: {self.score}", False, (255,255,255))
-        score_rect = score_surface.get_rect(topleft=(SCORE_X_OFFSET,0))
-        self.screen.blit(score_surface, score_rect)
-
-    def draw_lives(self):
-        for live in range(self.lives - 1):
-            x = self.live_position - (live * (self.live_surf.get_size()[0] + LIVES_X_OFFSET))
-            self.screen.blit(self.live_surf,(x, LIVES_Y_OFFSET))
-
-    def draw_menu(self):
-        self.draw_message('SPACE INVADERS', 'up')
-        self.draw_message('PRESS ENTER TO START')
-        self.draw_message('OR Q TO QUIT', 'down')
-
-    def draw_victory(self):
-        self.draw_message('CONGRATULATIONS', 'up')
-        self.draw_message('YOU WON!')
-        self.draw_message('PRESS Q TO QUIT', 'down')
-
-    def draw_game_over(self):
-        self.draw_message('YOU LOST!', 'up')
-        self.draw_message('PRESS R TO RESTART')
-        self.draw_message('OR Q TO QUIT', 'down')
-
-    def draw_message(self, message, position='mid'):
-        self.surf = self.font.render(message, False, (255,255,255))
-        if position == 'up':
-            self.rect = self.surf.get_rect(center = (WIDTH//2,HEIGHT//2 - 64))
-        elif position == 'down':
-            self.rect = self.surf.get_rect(center = (WIDTH//2,HEIGHT//2 + 64))
-        else:
-            self.rect = self.surf.get_rect(center = (WIDTH//2,HEIGHT//2))
-        self.screen.blit(self.surf, self.rect)
 
     def check_game_state(self):
         if self.lives <= 0:
