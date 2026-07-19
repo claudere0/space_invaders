@@ -67,8 +67,8 @@ class Game:
         self.create_multiple_obstacles()
 
         self.aliens.empty()
-        # self.spawn_aliens(6, 8)
-        self.spawn_aliens(1, 1)
+        self.spawn_aliens(6, 8)
+        # self.spawn_aliens(1, 1) # for tests
 
         self.aliens_lasers.empty()
         self.extra.empty()
