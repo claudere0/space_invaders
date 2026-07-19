@@ -22,8 +22,8 @@ LIVES_X_OFFSET = 32
 LIVES_Y_OFFSET = 48
 SCORE_X_OFFSET = 32
 EXTRA_VALUE = 500
-EXTRA_MIN_TIME = 450
-EXTRA_MAX_TIME = 900
+EXTRA_MIN_TIME = 7
+EXTRA_MAX_TIME = 15
 EXTRA_Y_POSITION = 128
 ALIEN_LAZER_TIMER = 750
 
@@ -47,22 +47,26 @@ class Player(pygame.sprite.Sprite):
         self.restart()
     
     def restart(self):
-        self.x = (WIDTH - self.width) // 2
+        self.x = (WIDTH - self.width) / 2
         self.y = HEIGHT - self.height
         self.rect = self.image.get_rect(topleft = (self.x, self.y))
-        self.speed = 6
+        self.speed = 360
         self.ready = True
         self.laser_time = 0
-        self.laser_cooldown = 600
+        self.laser_cooldown = 500
         self.lasers.empty()
 
-    def get_input(self):
+    def get_input(self, dt):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_RIGHT] and self.rect.x <= WIDTH - self.width:
-            self.rect.x += self.speed
+            self.x += self.speed * dt
+            self.x = min(self.x, WIDTH - self.width)
+            self.rect.x = round(self.x)
         elif keys[pygame.K_LEFT] and self.rect.x >= 0:
-            self.rect.x -= self.speed
+            self.x -= self.speed * dt
+            self.x = max(self.x, 0)
+            self.rect.x = round(self.x)
 
         if keys[pygame.K_SPACE] and self.ready:
             self.shoot_laser()
@@ -78,12 +82,12 @@ class Player(pygame.sprite.Sprite):
                 self.ready = True
 
     def shoot_laser(self):
-        self.lasers.add(Laser(self.rect.center, -12))
+        self.lasers.add(Laser(self.rect.center, -720))
 
-    def update(self):
-        self.get_input()
+    def update(self, dt):
+        self.get_input(dt)
         self.recharge()
-        self.lasers.update()
+        self.lasers.update(dt)
 
 class Laser(pygame.sprite.Sprite):
     def __init__(self, position, speed):
@@ -92,13 +96,15 @@ class Laser(pygame.sprite.Sprite):
         self.image.fill((255,255,255))
         self.speed = speed
         self.rect = self.image.get_rect(center=position)
+        self.y = position[1]
 
     def destroy(self):
         if self.rect.y <= -32 or self.rect.y >= HEIGHT + 32:
             self.kill()
 
-    def update(self):
-        self.rect.y += self.speed
+    def update(self, dt):
+        self.y += self.speed * dt
+        self.rect.y = round(self.y)
         self.destroy()
 
 class Block(pygame.sprite.Sprite):
@@ -114,7 +120,9 @@ class Alien(pygame.sprite.Sprite):
         file_path = 'images/' + color + '.png'
         self.image = pygame.image.load(file_path).convert_alpha()
         self.rect = self.image.get_rect(topleft = (x, y))
-        self.speed = 2
+        self.x = float(x)
+        self.y = float(y)
+        self.speed = 120
 
         if color == 'red':
             self.value = 100
@@ -123,8 +131,9 @@ class Alien(pygame.sprite.Sprite):
         else: 
             self.value = 300
 
-    def update(self, direction):
-        self.rect.x += direction * self.speed
+    def update(self, direction, dt):
+        self.x += direction * self.speed * dt
+        self.rect.x = round(self.x)
 
 class Extra(pygame.sprite.Sprite):
     def __init__(self, side):
@@ -133,15 +142,17 @@ class Extra(pygame.sprite.Sprite):
 
         if side == 'right':
             x = WIDTH + 32
-            self.speed = -4
+            self.speed = -240
         else:
             x = -32
-            self.speed = 4
+            self.speed = 240
 
+        self.x = float(x)
         self.rect = self.image.get_rect(topleft = (x, EXTRA_Y_POSITION))
 
-    def update(self):
-        self.rect.x += self.speed
+    def update(self, dt):
+        self.x += self.speed * dt
+        self.rect.x = round(self.x)
 
 class Game:
     def __init__(self):
@@ -180,6 +191,7 @@ class Game:
 
         self.running = True
         self.reset()
+        self.state = GameState.MENU
 
     def reset(self):
         self.score = 0
@@ -199,7 +211,7 @@ class Game:
         self.aliens_lasers.empty()
         self.extra.empty()
 
-        self.state = GameState.MENU
+        self.state = GameState.PLAYING
 
     def create_obstacle(self, x, y):
         for row_index, row in enumerate(SHAPE):
@@ -225,7 +237,8 @@ class Game:
     def aliens_move_down(self, distance):
         if self.aliens:
             for alien in self.aliens.sprites():
-                alien.rect.y += distance
+                alien.y += distance
+                alien.rect.y = round(alien.y)
 
     def aliens_position_checker(self):
         all_aliens = self.aliens.sprites()
@@ -240,12 +253,12 @@ class Game:
     def alien_shoot(self):
         if self.aliens:
             random_alien = choice(self.aliens.sprites())
-            laser_sprite = Laser(random_alien.rect.center, 6)
+            laser_sprite = Laser(random_alien.rect.center, 360)
             self.aliens_lasers.add(laser_sprite)
             self.laser_sound.play()
 
-    def extra_timer(self):
-        self.extra_spawn_time -= 1
+    def extra_timer(self, dt):
+        self.extra_spawn_time -= dt
         if self.extra_spawn_time <= 0:
             self.extra.add(Extra(choice(['right', 'left'])))
             self.extra_spawn_time = randint(EXTRA_MIN_TIME, EXTRA_MAX_TIME)
@@ -264,25 +277,24 @@ class Game:
                 elif self.state == GameState.GAME_OVER:
                     if event.key == pygame.K_r:
                         self.reset()
-                        self.state = GameState.PLAYING
                 if event.key == pygame.K_q:
                     self.running = False
 
-    def update(self):
+    def update(self, dt):
         if self.state == GameState.PLAYING:
-            self.update_objects()
+            self.update_objects(dt)
             self.collision_checks()
             self.check_game_state()
         else:
             return None
 
-    def update_objects(self):
-        self.player.update()
-        self.aliens.update(self.alien_direction)
+    def update_objects(self, dt):
+        self.player.update(dt)
+        self.aliens.update(self.alien_direction, dt)
         self.aliens_position_checker()
-        self.aliens_lasers.update()
-        self.extra_timer()
-        self.extra.update()
+        self.aliens_lasers.update(dt)
+        self.extra_timer(dt)
+        self.extra.update(dt)
 
     def collision_checks(self):
         self.laser_collision()
@@ -320,7 +332,7 @@ class Game:
             pygame.sprite.spritecollide(alien, self.blocks, True)
 
             if pygame.sprite.spritecollide(alien, self.player, False):
-                self.running = False
+                self.state = GameState.GAME_OVER
 
     def draw(self):
         self.screen.fill((0,0,0))
@@ -387,9 +399,9 @@ class Game:
 
     def run(self):
         while self.running:
-            self.clock.tick(FPS)
+            dt = self.clock.tick(FPS) / 1000
             self.handle_events()
-            self.update()
+            self.update(dt)
             self.draw()
         pygame.quit()
 
