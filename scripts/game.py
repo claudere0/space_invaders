@@ -136,7 +136,7 @@ class Game:
                 if self.state == GameState.MENU:
                     if event.key == pygame.K_RETURN:
                         self.state = GameState.PLAYING
-                elif self.state == GameState.GAME_OVER:
+                elif self.state == GameState.GAME_OVER or self.state == GameState.WIN:
                     if event.key == pygame.K_r:
                         self.reset()
                 if event.key == pygame.K_q:
@@ -231,7 +231,3 @@ class Game:
             self.update(dt)
             self.draw()
         pygame.quit()
-
-if __name__ == '__main__':
-    game = Game()
-    game.run()
