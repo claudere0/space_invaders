@@ -80,3 +80,8 @@ space_invaders/
    cd scripts
    python main.py
    ```
+
+## Acknowledgments
+
+This project was inspired by and built following the excellent tutorial by the YouTube channel **Clear Code**. 
+You can watch the video review/tutorial here: [https://www.youtube.com/watch?v=o-6pADy5Mdg](https://www.youtube.com/watch?v=o-6pADy5Mdg).
