@@ -87,8 +87,8 @@ class Game:
                 self.create_obstacle(i * 128 + offset, self.obstacle_y_position)
 
     def spawn_aliens(self, rows, cols, width=64, height=48, x_offset = 32, y_offset = 32, starting_offset = 128):
-        for row_index, row in enumerate(range(rows)):
-            for col_index, col in enumerate(range(cols)):
+        for row_index in range(rows):
+            for col_index in range(cols):
                 x = col_index * width + col_index * x_offset
                 y = row_index * height + row_index * y_offset + starting_offset
                 if row_index == 0: alien_sprite = Alien('yellow', x, y)
